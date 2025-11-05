@@ -12,14 +12,14 @@ REST API untuk Nutech Integration Test menggunakan Express.js
 - PUT `/profile/image` - Update profile image
 
 ### Module Information
-- GET `/banner` - Get banner list
-- GET `/services` - Get services list
+- GET `/banner` - Get banner list (public)
+- GET `/services` - Get services list (private, Bearer token)
 
 ### Module Transaction
-- GET `/balance` - Get balance user
-- POST `/topup` - Top up balance
-- POST `/transaction` - Create transaction
-- GET `/transaction/history` - Get transaction history
+- GET `/balance` - Get balance user (private)
+- POST `/topup` - Top up balance (private)
+- POST `/transaction` - Create transaction/payment (private)
+- GET `/transaction/history` - Get transaction history (private)
 
 ## Setup
 
@@ -33,23 +33,58 @@ npm install
 - Import schema dari `database/schema.sql`
 
 3. Setup environment variables:
-```bash
-cp .env.example .env
+Buat file `.env` berdasarkan `.env.example`:
 ```
-Edit file `.env` dengan konfigurasi database Anda
+PORT=3000
+BASE_URL=http://localhost:3000
+JWT_SECRET=your-secret-key-here
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=nutech_db
+```
 
 4. Run application:
 ```bash
 npm start
 ```
-atau untuk development:
-```bash
-npm run dev
-```
 
 ## Database Schema
 
 Database schema dapat ditemukan di `database/schema.sql`
+
+## Deployment ke Railway
+
+1. Push ke GitHub
+- Inisialisasi Git dan push ke repo GitHub Anda.
+
+2. Buat project di Railway
+- Masuk `railway.app` → New Project → Deploy from GitHub → pilih repo ini
+
+3. Tambahkan MySQL
+- Opsi A: Tambah plugin Database MySQL di Railway → dapatkan kredensial (HOST/USER/PASSWORD/DB_NAME)
+- Opsi B: Gunakan MySQL eksternal (isi env sesuai server Anda)
+
+4. Set Environment Variables (Project → Variables)
+```
+PORT=3000
+JWT_SECRET=<isi rahasia>
+BASE_URL=https://<subdomain-railway-anda>.up.railway.app
+DB_HOST=<host mysql>
+DB_USER=<user mysql>
+DB_PASSWORD=<password mysql>
+DB_NAME=<nama database>
+```
+
+5. Import schema
+- Import `database/schema.sql` ke database MySQL yang digunakan (Railway DB atau eksternal)
+
+6. Deploy & verifikasi
+- Railway akan menjalankan `web: node server.js` (Procfile tersedia)
+- Cek Logs → pastikan server running
+- Uji endpoint (perlu token untuk route private)
+
+Catatan: Penyimpanan file `uploads/` pada Railway bersifat ephemeral. Untuk produksi, gunakan object storage (mis. S3) jika butuh persistensi file.
 
 ## API Documentation
 
