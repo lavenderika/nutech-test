@@ -1,116 +1,69 @@
 # Nutech Test API
 
-REST API untuk Nutech Integration Test menggunakan Express.js
+REST API untuk **Nutech Integration Test** menggunakan **Express.js** dan **MySQL**.  
+Aplikasi ini dikembangkan berdasarkan dokumentasi Swagger resmi dari Nutech Integrasi.
 
-## Fitur
+---
+
+## Deployment
+
+- **Base URL API:** [https://nutech-test-production-ecab.up.railway.app](https://nutech-test-production-ecab.up.railway.app)
+- **API Documentation (Swagger):** [https://api-doc-tht.nutech-integrasi.com](https://api-doc-tht.nutech-integrasi.com)
+- **GitHub Repository:** [https://github.com/lavenderika/nutech-test](https://github.com/lavenderika/nutech-test)
+
+---
+
+## Fitur API
 
 ### Module Membership
-- POST `/registration` - Registrasi user baru
-- POST `/login` - Login user
-- GET `/profile` - Get profile user
-- PUT `/profile/update` - Update profile user
-- PUT `/profile/image` - Update profile image
+| Method | Endpoint | Deskripsi |
+|---------|-----------|-----------|
+| POST | `/registration` | Registrasi user baru |
+| POST | `/login` | Login user |
+| GET | `/profile` | Ambil data profil user |
+| PUT | `/profile/update` | Update data profil user |
+| PUT | `/profile/image` | Update foto profil user |
 
 ### Module Information
-- GET `/banner` - Get banner list (public)
-- GET `/services` - Get services list (private, JWT)
+| Method | Endpoint | Deskripsi |
+|---------|-----------|-----------|
+| GET | `/banner` | Ambil daftar banner (public) |
+| GET | `/services` | Ambil daftar layanan (private, JWT) |
 
 ### Module Transaction
-- GET `/balance` - Get balance user (JWT)
-- POST `/topup` - Top up balance (JWT)
-- POST `/transaction` - Create transaction/payment (JWT)
-- GET `/transaction/history` - Get transaction history (JWT)
+| Method | Endpoint | Deskripsi |
+|---------|-----------|-----------|
+| GET | `/balance` | Ambil saldo user |
+| POST | `/topup` | Top up saldo |
+| POST | `/transaction` | Buat transaksi pembayaran |
+| GET | `/transaction/history` | Lihat riwayat transaksi |
 
-## Setup
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Setup database:
-- Buat database MySQL
-- Import schema dari `database/schema.sql`
-- Opsional: isi data contoh `database/seed.sql`
-
-3. Setup environment variables:
-Buat `.env` dari `.env.example` dan sesuaikan nilai:
-```
-PORT=3000
-BASE_URL=http://localhost:3000
-JWT_SECRET=your-secret-key-here
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=nutech_db
-```
-
-4. Run application:
-```bash
-npm start
-```
-atau untuk development:
-```bash
-npm run dev
-```
+---
 
 ## Database Schema
 
-Database schema dapat ditemukan di `database/schema.sql` (DDL). Seed tersedia di `database/seed.sql`.
+Struktur database tersedia di file:  
+📄 [`database/schema.sql`](database/schema.sql)
 
-## Deploy ke Railway
+Contoh struktur tabel utama:
+```sql
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  password VARCHAR(255) NOT NULL,
+  profile_image VARCHAR(255),
+  balance DECIMAL(15,2) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-1. Push repo ke GitHub (sudah): pastikan `.gitignore` mengecualikan `.env`.
-2. Railway: buat project → Deploy from GitHub → pilih repo ini.
-3. Tambahkan Environment Variables di Railway Service:
-   - `PORT`: 3000 (opsional, Railway set otomatis)
-   - `BASE_URL`: `https://<subdomain>.railway.app`
-   - `JWT_SECRET`: rahasia JWT
-   - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: kredensial MySQL (Railway DB atau eksternal)
-4. Jika pakai Railway MySQL: tambahkan plugin Database → salin kredensial → set ke env di Service → import `database/schema.sql` (dan `database/seed.sql` opsional) ke DB tersebut.
-5. Deploy akan menjalankan `npm start`. Cek Logs sampai muncul "Server is running on port ...".
-6. Uji endpoint (gunakan domain Railway).
-
-Catatan: penyimpanan file uploads di hosting stateless bisa hilang setelah redeploy. Untuk profile image persistence di production, pertimbangkan storage eksternal (S3/GCS) dan ganti `BASE_URL`/upload path.
-
-## API Documentation
-
-### POST /registration
-
-Registrasi user baru.
-
-**Request Body:**
-```json
-{
-  "email": "user@nutech-integrasi.com",
-  "first_name": "User",
-  "last_name": "Nutech",
-  "password": "abcdef1234"
-}
-```
-
-**Response Success (200):**
-```json
-{
-  "status": 0,
-  "message": "Registrasi berhasil silahkan login",
-  "data": null
-}
-```
-
-**Response Error (400):**
-```json
-{
-  "status": 102,
-  "message": "Paramter email tidak sesuai format",
-  "data": null
-}
-```
-
-## Teknologi
-
-- Node.js
-- Express.js
-- MySQL2 (dengan prepared statements)
-- bcrypt (untuk password hashing)
-
+CREATE TABLE transactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  type ENUM('topup','payment') NOT NULL,
+  amount DECIMAL(15,2) NOT NULL,
+  description VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
