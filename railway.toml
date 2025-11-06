@@ -1,0 +1,3 @@
+[service]
+name = "nutech-test-api"
+start = "npm start"

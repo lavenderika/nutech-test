@@ -13,13 +13,13 @@ REST API untuk Nutech Integration Test menggunakan Express.js
 
 ### Module Information
 - GET `/banner` - Get banner list (public)
-- GET `/services` - Get services list (private, Bearer token)
+- GET `/services` - Get services list (private, JWT)
 
 ### Module Transaction
-- GET `/balance` - Get balance user (private)
-- POST `/topup` - Top up balance (private)
-- POST `/transaction` - Create transaction/payment (private)
-- GET `/transaction/history` - Get transaction history (private)
+- GET `/balance` - Get balance user (JWT)
+- POST `/topup` - Top up balance (JWT)
+- POST `/transaction` - Create transaction/payment (JWT)
+- GET `/transaction/history` - Get transaction history (JWT)
 
 ## Setup
 
@@ -31,9 +31,10 @@ npm install
 2. Setup database:
 - Buat database MySQL
 - Import schema dari `database/schema.sql`
+- Opsional: isi data contoh `database/seed.sql`
 
 3. Setup environment variables:
-Buat file `.env` berdasarkan `.env.example`:
+Buat `.env` dari `.env.example` dan sesuaikan nilai:
 ```
 PORT=3000
 BASE_URL=http://localhost:3000
@@ -48,43 +49,29 @@ DB_NAME=nutech_db
 ```bash
 npm start
 ```
+atau untuk development:
+```bash
+npm run dev
+```
 
 ## Database Schema
 
-Database schema dapat ditemukan di `database/schema.sql`
+Database schema dapat ditemukan di `database/schema.sql` (DDL). Seed tersedia di `database/seed.sql`.
 
-## Deployment ke Railway
+## Deploy ke Railway
 
-1. Push ke GitHub
-- Inisialisasi Git dan push ke repo GitHub Anda.
+1. Push repo ke GitHub (sudah): pastikan `.gitignore` mengecualikan `.env`.
+2. Railway: buat project → Deploy from GitHub → pilih repo ini.
+3. Tambahkan Environment Variables di Railway Service:
+   - `PORT`: 3000 (opsional, Railway set otomatis)
+   - `BASE_URL`: `https://<subdomain>.railway.app`
+   - `JWT_SECRET`: rahasia JWT
+   - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: kredensial MySQL (Railway DB atau eksternal)
+4. Jika pakai Railway MySQL: tambahkan plugin Database → salin kredensial → set ke env di Service → import `database/schema.sql` (dan `database/seed.sql` opsional) ke DB tersebut.
+5. Deploy akan menjalankan `npm start`. Cek Logs sampai muncul "Server is running on port ...".
+6. Uji endpoint (gunakan domain Railway).
 
-2. Buat project di Railway
-- Masuk `railway.app` → New Project → Deploy from GitHub → pilih repo ini
-
-3. Tambahkan MySQL
-- Opsi A: Tambah plugin Database MySQL di Railway → dapatkan kredensial (HOST/USER/PASSWORD/DB_NAME)
-- Opsi B: Gunakan MySQL eksternal (isi env sesuai server Anda)
-
-4. Set Environment Variables (Project → Variables)
-```
-PORT=3000
-JWT_SECRET=<isi rahasia>
-BASE_URL=https://<subdomain-railway-anda>.up.railway.app
-DB_HOST=<host mysql>
-DB_USER=<user mysql>
-DB_PASSWORD=<password mysql>
-DB_NAME=<nama database>
-```
-
-5. Import schema
-- Import `database/schema.sql` ke database MySQL yang digunakan (Railway DB atau eksternal)
-
-6. Deploy & verifikasi
-- Railway akan menjalankan `web: node server.js` (Procfile tersedia)
-- Cek Logs → pastikan server running
-- Uji endpoint (perlu token untuk route private)
-
-Catatan: Penyimpanan file `uploads/` pada Railway bersifat ephemeral. Untuk produksi, gunakan object storage (mis. S3) jika butuh persistensi file.
+Catatan: penyimpanan file uploads di hosting stateless bisa hilang setelah redeploy. Untuk profile image persistence di production, pertimbangkan storage eksternal (S3/GCS) dan ganti `BASE_URL`/upload path.
 
 ## API Documentation
 
